@@ -115,5 +115,5 @@ JUSTICE_SWAP_TOKENS <- list(
 )
 
 
-source("packrat/init.R")
+
 #### -- End Packrat Autoloader -- ####

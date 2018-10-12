@@ -75,7 +75,7 @@ option_list = list(
   ),
   make_option(c("-e", "--environment"),
     type    = "character",
-    default = NULL, 
+    default = "prod", 
     help    = "Sets K, input and output to sensible values for 'test' and 'prod' environments.  Values can be either 'test' or 'prod'",
     metavar = "character"
   )
@@ -112,9 +112,10 @@ print(str_interp('Saving to ${opt$output_dir} directory'))
 
 #read in questions
 print('Reading questions')
-aPQ <- read_csv(opt$input_file)
-aPQ <- aPQ[order(aPQ$Question_Date, decreasing = TRUE),] #reorder to have most recent first
-questionsVec <- aPQ$Question_Text
+aPQ <- data
+#aPQ <- read_csv(opt$input_file)
+aPQ <- aPQ[order(aPQ$date_of_answer_value, decreasing = TRUE),] #reorder to have most recent first
+questionsVec <- aPQ$question_text
 
 #MAKE THE TERM-DOCUMENT MATRIX AND LATENT SEMANTIC ANALYSIS SPACE
 print('Making the TDM')
@@ -190,14 +191,14 @@ clusterKeywordsVec <- sapply(seq_along(clusterKeywords[1, ]),
 #Member summaries
 print("summarising members")
 
-allMembers <- sort(unique(aPQ$Question_MP))
+allMembers <- sort(unique(aPQ$tabling_member_printed))
 
 topDozenWordsPerMember <- data.frame(
   member = unlist(lapply(allMembers, function(x)rep(x, 12))),
   word = unlist(lapply(allMembers,
-                       function(x) names(summarise("MP", x, m, aPQ$Question_MP, 12, questionsVec)))),
+                       function(x) names(summarise("MP", x, m, aPQ$tabling_member_printed, 12, questionsVec)))),
   freq = unlist(lapply(allMembers,
-                       function(x) summarise("MP", x, m, aPQ$Question_MP, 12, questionsVec))),
+                       function(x) summarise("MP", x, m, aPQ$tabling_member_printed, 12, questionsVec))),
   row.names = NULL, stringsAsFactors = F)
 
 
@@ -214,7 +215,7 @@ quant95s <- quantile(as.vector(search.space), c(0.025, 0.975))
 search.space[which(search.space > quant95s[1] & search.space < quant95s[2])] <- 0
 
 ##This is just a check to see that this sparsification doesn't lead to wildly varying document lengths
-collengths <- sapply(seq_along(aPQ$Question_ID),
+collengths <- sapply(seq_along(aPQ$uin),
                 function(x) normVec(search.space[, x]))
 summary(collengths)
 
@@ -238,20 +239,20 @@ save(search.space, file = "searchSpace.rda")
 
 #The questions and their data (including cluster)
 savedf <- data.frame(
-  Document_Number = seq_along(aPQ$Question_ID),
-  Question_ID = aPQ$Question_ID,
-  Question_Text = aPQ$Question_Text,
-  Answer_Text = aPQ$Answer_Text,
-  Question_MP = aPQ$Question_MP,
-  MP_Party    = aPQ$Party,
-  MP_Constituency = aPQ$MP_Constituency,
-  Answer_MP = aPQ$Answer_MP,
-  Date = aPQ$Question_Date,
-  Answer_Date = aPQ$Answer_Date,
-  #Corrected_Date = aPQ$Corrected_Date,
+  Document_Number = seq_along(aPQ$uin),
+  Question_ID = aPQ$uin,
+  Question_Text = aPQ$question_text,
+  Answer_Text = aPQ$answer_text_value,
+  Question_MP = aPQ$tabling_member_printed,
+  MP_Party    = "None",
+  MP_Constituency = aPQ$tabling_member_constituency_value,
+  Answer_MP = aPQ$answering_member_printed_value,
+  Date = aPQ$date_value,
+  Answer_Date = aPQ$date_of_answer_value,
+  Corrected_Date = "none",
   Topic = klusters,
-  Topic_Keywords = clusterKeywordsVec[klusters],
-  stringsAsFactors = FALSE)
+  Topic_Keywords =  clusterKeywordsVec[klusters],
+  stringsAsFactors = T)
 write.csv(savedf, "MoJwrittenPQs.csv")
 
 #The information about the clusters

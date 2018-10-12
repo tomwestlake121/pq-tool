@@ -99,7 +99,7 @@ SimilaritiesForTopic <- function(topicNum, topicDistList){
 
 #All the questions in a given topic
 QuestionsForTopic <- function(topicNum, rawData){
-  rawData[which(rawData$Cluster == topicNum),] %>%
+  rawData[which(rawData$Topic == topicNum),] %>%
     as.list()
 }
 
@@ -126,13 +126,13 @@ plotWordcloud <- function(analysisObject){
 #Analysis
 
 #get data
-setwd("../Data")
-file <- "MoJwrittenPQs.csv"
+
+file <- "Data/MoJwrittenPQs.csv"
 rawData <- read.csv(file, stringsAsFactors = F)
 
 #A data frame of the data
 MPTopicDf <- rawData %>%
-  dcast(Question_MP ~ Cluster)
+  dcast(Question_MP ~ Topic)
 
 #now turning it into a matrix
 MPTopicMatrix <- MPTopicDf %>%
@@ -140,7 +140,7 @@ MPTopicMatrix <- MPTopicDf %>%
                      as.matrix()
 
 #topic three key word descriptions
-keywords <- unique(rawData$Cluster_Keywords[order(rawData$Cluster)])
+keywords <- unique(rawData$Topic_Keywords[order(rawData$Topic)])
 
 rownames(MPTopicMatrix) <- MPTopicDf$Question_MP
 colnames(MPTopicMatrix) <- keywords
@@ -190,15 +190,15 @@ topicDistList <- topicDist %>%
 
 #Go output
 
-DA <- MPAnalysis("Abbott, Diane", MPTopicMatrix, MPDistList, rawData)
+DA <- MPAnalysis("Nia Griffith", MPTopicMatrix, MPDistList, rawData)
 
 PD <- MPAnalysis("Davies, Philip", MPTopicMatrix, MPDistList, rawData)
 
 allMPs <- lapply(MPTopicDf$Question_MP,function(x) MPAnalysis(x, MPTopicMatrix, MPDistList, rawData))
 names(allMPs) <- MPTopicDf$Question_MP
 
-allTopics <- lapply(seq(1000), function(x) topicAnalysis(x, MPTopicMatrix, topicDistList, rawData))
-names(allTopics) <- seq(1000)
+allTopics <- lapply(seq(100), function(x) topicAnalysis(x, MPTopicMatrix, topicDistList, rawData))
+names(allTopics) <- seq(100)
 
 save(MPDistList, file = "MPDistList")
 
